@@ -78,25 +78,32 @@ async def send_weather(message: types.Message):
     weather = f"🌡 Температура: {data['current']['temp_c']}°C\n🌤 {data['current']['condition']['text']}"
     await message.answer(weather)
 
-
-
 @dp.callback_query(lambda c: c.data == "currency")
-async def send_currency(callback: types.CallbackQuery):
-    url = "https://valuta.kg"
+async def fetch_currency():
+    url = "https://valuta.kg/"
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            html = await resp.text()
-
-
-    soup = BeautifulSoup(html, "html.parser")
-
-    usd_rate_div = soup.find("div", class_="usd-rate")
-    if usd_rate_div:
-        usd_rate = usd_rate_div.text.strip()
-    else:
-        usd_rate = "Курс не найден"
-
-    await callback.message.answer(f"💰 Курс USD: {usd_rate} KGS")
+        async with session.get(url) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, "html.parser")
+                currency_names = []
+                names_table = soup.find("table", class_="kurs-table")
+                if names_table:
+                    rows = names_table.find_all("tr")[1:]
+                    for row in rows:
+                        currency_div = row.find("div", class_="rate-name")
+                        if currency_div:
+                            currency_names.append(currency_div.text.strip())
+                exchange_rates = []
+                rates_table = soup.find_all("table", class_="kurs-table")[1]
+                if rates_table:
+                    rows = rates_table.find_all("tr")
+                    for row in rows:
+                        cols = row.find_all("td")
+                        if len(cols) >= 2:
+                            buy_price = cols[0].text.strip()
+                            sell_price = cols[1].text.strip()
+                            exchange_rates.append((buy_price, sell_price))
 
 
 
