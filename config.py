@@ -19,7 +19,7 @@ DEBUG = True
 
 
 if not TOKEN:
-    raise ValueError("❌ Ошибка: Токен не найден! Проверь .env файл.")
+    raise ValueError(" Ошибка: Токен не найден! Проверь .env файл.")
 
 
 
